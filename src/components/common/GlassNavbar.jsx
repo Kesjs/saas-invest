@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 import { toast } from 'react-hot-toast';
 import './GlassNavbar.css';
 
@@ -155,13 +158,12 @@ const GlassNavbar = () => {
               className="flex items-center space-x-3 group transition-transform hover:scale-105"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/80 rounded-xl blur-lg opacity-70 group-hover:opacity-100 transition-all duration-300"></div>
-                <div className="relative bg-gradient-to-br from-primary to-primary/80 p-2 rounded-xl shadow-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
+              <div className="relative h-10 w-10">
+                <img 
+                  src="/logo.svg" 
+                  alt="Logo Gazoduc Invest" 
+                  className="h-full w-full object-contain"
+                />
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 Gazoduc Invest
@@ -202,8 +204,13 @@ const GlassNavbar = () => {
               </div>
             </div>
 
-            {/* Boutons d'authentification */}
+            {/* Boutons d'authentification et thème */}
             <div className="hidden md:flex items-center gap-3">
+              {/* Bouton de bascule de thème */}
+              <div className="mr-2">
+                <ThemeToggle />
+              </div>
+              
               {user ? (
                 <div className="flex items-center gap-3">
                   <Link 
@@ -235,7 +242,7 @@ const GlassNavbar = () => {
                   </Link>
                   <Link 
                     to="/register" 
-                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-primary/30"
+                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg hover:opacity-90 transition-all duration-200"
                   >
                     S'inscrire
                   </Link>
@@ -285,10 +292,10 @@ const GlassNavbar = () => {
                 to="/contact" 
                 text="Contact" 
               />
-              <MobileNavLink 
-                to="/faq" 
-                text="FAQ" 
-              />
+              <div className="px-4 py-2">
+                <p className="text-xs font-medium text-gray-400 mb-1">Thème</p>
+                <ThemeToggle />
+              </div>
               
               {user ? (
                 <div className="border-t border-white/10 pt-3 mt-2">

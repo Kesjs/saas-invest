@@ -2,6 +2,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from 'react-error-boundary';
+import StyleDebugger from './components/debug/StyleDebugger';
 
 // Composant de chargement simplifié
 const LoadingFallback = () => (
@@ -31,7 +32,8 @@ const BaseLayout = () => {
   console.log('Rendu du composant BaseLayout');
   
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <StyleDebugger />
       <Toaster 
         position="top-right" 
         toastOptions={{
@@ -42,15 +44,24 @@ const BaseLayout = () => {
           },
         }}
       />
-      <Suspense 
-        fallback={
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onError={(error, errorInfo) => {
+          console.error('[APP] Erreur dans ErrorBoundary:', error, errorInfo);
+        }}
+        onReset={() => {
+          console.log('[APP] Réinitialisation de l\'application');
+          window.location.reload();
+        }}
+      >
+        <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
-        }
-      >
-        <Outlet />
-      </Suspense>
+        }>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };
@@ -127,20 +138,24 @@ export default function App() {
   
   try {
     return (
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onError={(error, errorInfo) => {
-          console.error('[APP] Erreur dans ErrorBoundary:', error, errorInfo);
-        }}
-        onReset={() => {
-          console.log('[APP] Réinitialisation de l\'application');
-          window.location.reload();
-        }}
-      >
-        <div className="app-content">
-          <BaseLayout />
-        </div>
-      </ErrorBoundary>
+  <ErrorBoundary
+  FallbackComponent={ErrorFallback}
+  onError={(error, errorInfo) => {
+    console.error('[APP] Erreur dans ErrorBoundary:', error, errorInfo);
+  }}
+  onReset={() => {
+    console.log('[APP] Réinitialisation de l\'application');
+    window.location.reload();
+  }}
+>
+  <Suspense fallback={
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+    </div>
+  }>
+    <Outlet />
+  </Suspense>
+</ErrorBoundary>
     );
   } catch (error) {
     console.error('[APP] Erreur lors du rendu du contenu principal:', error);

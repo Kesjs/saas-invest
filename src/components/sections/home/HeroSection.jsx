@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import heroImage from '../../../images/hero-image.jpg';
 
 const HeroSection = ({ scrollTo }) => {
   const fadeInUp = {
@@ -55,18 +56,21 @@ const HeroSection = ({ scrollTo }) => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="relative"
+            className="relative flex items-center justify-center"
           >
-            <div className="relative z-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl p-1 backdrop-blur-sm">
-              <div className="bg-black/50 rounded-xl overflow-hidden border border-white/10">
+            <div className="relative z-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl p-1.5 backdrop-blur-sm">
+              <div className="relative w-full h-64 md:h-80 rounded-lg shadow-2xl overflow-hidden">
                 <img 
-                  src="/images/hero-image.jpg" 
-                  alt="Investissement dans l'énergie" 
-                  className="w-full h-auto object-cover opacity-90"
+                  src={heroImage}
+                  alt="Investissement dans l'énergie"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+                  }}
                 />
               </div>
             </div>
-            
             {/* Éléments flottants décoratifs */}
             <div className="absolute -top-6 -right-6 w-24 h-24 bg-primary/20 rounded-full filter blur-xl animate-float"></div>
             <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-secondary/20 rounded-full filter blur-xl animate-float animation-delay-2000"></div>

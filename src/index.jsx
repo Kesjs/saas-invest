@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './contexts/SupabaseAuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { router } from './routes';
 import './index.css';
 
@@ -38,20 +39,22 @@ const Root = () => {
   console.log('[ROOT] Rendu du composant Root');
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider 
-          router={routerWithFutureFlags} 
-          future={routerWithFutureFlags.future}
-          fallbackElement={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          }
-        />
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider 
+            router={routerWithFutureFlags} 
+            future={routerWithFutureFlags.future}
+            fallbackElement={
+              <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center transition-colors duration-300">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            }
+          />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

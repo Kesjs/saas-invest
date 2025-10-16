@@ -18,43 +18,63 @@ const PricingSection = () => {
   const plans = [
     {
       name: 'Starter',
-      capital: 32,
-      daily: 0.48,
-      monthly: 9.6,
-      total: 96,
-      badge: 'Débutant',
+      price: 100,
+      badge: 'Parfait pour débuter',
       icon: Zap,
-      popular: false
+      popular: false,
+      features: [
+        'Retour sur investissement garanti',
+        'Support prioritaire',
+        'Accès à la plateforme',
+        'Rapports mensuels'
+      ]
     },
     {
       name: 'Croissance',
-      capital: 75,
-      daily: 1.12,
-      monthly: 22.5,
-      total: 225,
-      badge: 'Populaire',
+      price: 225,
+      badge: 'Meilleur choix',
       icon: TrendingUp,
-      popular: true
+      popular: true,
+      features: [
+        'Tout dans Starter, plus:',
+        'Retour sur investissement supérieur',
+        'Support 24/7',
+        'Analyse personnalisée',
+        'Rapports hebdomadaires'
+      ]
     },
     {
       name: 'Premium',
-      capital: 999,
-      daily: 14.99,
-      monthly: 299.8,
-      total: 2997,
-      badge: 'Avancé',
+      price: 999,
+      fee: 30,
+      badge: 'Investisseur avancé',
       icon: Award,
-      popular: false
+      popular: false,
+      features: [
+        'Tout dans Croissance, plus:',
+        'Gestion de portefeuille personnalisée',
+        'Rencontres trimestrielles',
+        'Accès anticipé aux opportunités',
+        'Rapports détaillés',
+        'Assistance VIP dédiée'
+      ]
     },
     {
-      name: 'Elite',
-      capital: 1999,
-      daily: 29.99,
-      monthly: 599.8,
-      total: 5997,
-      badge: 'VIP',
+      name: 'Élite',
+      price: 1999,
+      fee: 30,
+      badge: 'Investisseur professionnel',
       icon: Flame,
-      popular: false
+      popular: false,
+      features: [
+        'Tout dans Premium, plus:',
+        'Stratégie d\'investissement sur mesure',
+        'Rencontres mensuelles',
+        'Accès exclusif aux opportunités',
+        'Rapports personnalisés',
+        'Conseiller personnel dédié',
+        'Invitations aux événements VIP'
+      ]
     }
   ];
 
@@ -106,47 +126,48 @@ const PricingSection = () => {
                   </div>
                 )}
                 
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                      <span className="text-sm text-gray-400">{plan.badge}</span>
+                <div className="p-6 flex flex-col h-full">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                        <span className="text-sm text-primary">{plan.badge}</span>
+                      </div>
+                      <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                        <Icon className="w-6 h-6" />
+                      </div>
                     </div>
-                    <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                      <Icon className="w-6 h-6" />
+                    
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold text-white">${plan.price}</span>
+                      {plan.fee && (
+                        <span className="text-gray-400"> + ${plan.fee} de frais</span>
+                      )}
+                      <span className="block text-sm text-gray-400 mt-1">Investissement unique</span>
                     </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-white">${plan.capital}</span>
-                    <span className="text-gray-400"> / investissement</span>
-                  </div>
-                  
-                  <div className="space-y-3 mb-8 text-sm text-gray-300">
-                    <div className="flex justify-between">
-                      <span>Retour quotidien:</span>
-                      <span className="font-medium">${plan.daily}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Retour mensuel:</span>
-                      <span className="font-medium">${plan.monthly}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total après 100 jours:</span>
-                      <span className="font-medium">${plan.total}</span>
-                    </div>
+                    
+                    <ul className="space-y-3 mb-6 text-sm text-gray-300">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start">
+                          <svg className="w-4 h-4 mt-0.5 mr-2 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
+                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mt-auto ${
                       plan.popular
                         ? 'bg-primary hover:bg-primary/90 text-white'
                         : 'bg-white/10 hover:bg-white/20 text-white'
                     }`}
                   >
-                    Choisir {plan.name}
+                    Souscrire {plan.name}
                   </motion.button>
                 </div>
               </motion.div>
