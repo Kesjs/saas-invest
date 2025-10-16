@@ -49,20 +49,19 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root">
-      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: #0a0a0a; color: white; font-family: Arial, sans-serif; z-index: 9999;" id="loading-message">
-        <div style="text-align: center;">
-          <div class="loader-spinner"></div>
-          <p style="margin-top: 20px; font-size: 18px;">Chargement de l'application...</p>
-        </div>
-      </div>
+    <div id="loader">
+      <div class="loader-spinner"></div>
     </div>
+    <div id="root"></div>
     <script>
-      // Script pour masquer le message de chargement une fois l'application chargée
-      window.addEventListener('app-loaded', function() {
-        const loadingMessage = document.getElementById('loading-message');
-        if (loadingMessage) {
-          loadingMessage.style.display = 'none';
+      // Masquer le loader lorsque l'application est chargée
+      window.addEventListener('load', function() {
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => {
+            loader.style.display = 'none';
+          }, 500);
         }
       });
     </script>
