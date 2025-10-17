@@ -47,6 +47,7 @@ const registerSchema = yup.object().shape({
 
 const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
@@ -73,23 +74,54 @@ const RegisterPage = () => {
 
     try {
       await registerUser({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.toLowerCase().trim(),
         phone: data.phone,
         password: data.password,
-        referralCode: data.referralCode || undefined,
+        referralCode: data.referralCode || null,
       });
-
-      // Redirect to dashboard after successful registration
-      navigate('/dashboard');
+      
+      setSuccess(true);
+      // Rediriger vers la page de vérification d'email
+      navigate('/verify-email');
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Une erreur est survenue lors de l\'inscription');
+      setError(
+        err.message || 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Si l'inscription a réussi, afficher un message de succès
+  if (success) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+          <div className="flex justify-center">
+            <Logo className="h-16 w-auto" />
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            Inscription réussie !
+          </h2>
+          <p className="mt-4 text-center text-gray-300">
+            Un email de vérification a été envoyé à <span className="font-medium">{watch('email')}</span>.
+            Veuillez vérifier votre boîte de réception et suivre les instructions pour activer votre compte.
+          </p>
+          <div className="mt-8">
+            <Link
+              to="/login"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              Retour à la page de connexion
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getPasswordStrength = (password) => {
     if (!password) return { score: 0, label: 'Faible', color: 'bg-red-500' };

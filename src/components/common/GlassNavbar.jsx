@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import { Menu, X, ChevronDown, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import './GlassNavbar.css';
 
@@ -68,7 +67,8 @@ const GlassNavbar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Fermer le menu mobile lors du changement de route
   useEffect(() => {
@@ -123,13 +123,19 @@ const GlassNavbar = () => {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
     try {
       await logout();
       toast.success('Déconnexion réussie');
-      navigate('/');
+      // Forcer un rechargement complet pour nettoyer tous les états
+      window.location.href = '/';
     } catch (error) {
-      toast.error('Erreur lors de la déconnexion');
       console.error('Logout error:', error);
+      toast.error(error.message || 'Erreur lors de la déconnexion');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -155,98 +161,108 @@ const GlassNavbar = () => {
             {/* Logo */}
             <Link 
               to="/" 
-              className="flex items-center space-x-3 group transition-transform hover:scale-105"
+              className="flex items-center space-x-3 no-underline hover:no-underline"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <div className="relative h-10 w-10">
+              <div className="relative h-16 w-16">
                 <img 
-                  src="/logo.svg" 
+                  src="https://i.pinimg.com/originals/86/9f/b0/869fb06135a2dc55e520ce34cfe6c385.jpg" 
                   alt="Logo Gazoduc Invest" 
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Gazoduc Invest
+              <span className="text-lg font-bold text-primary-300 underline decoration-primary-300 decoration-2">
+                Gazoduc Invest.
               </span>
             </Link>
 
             {/* Navigation desktop */}
             <div className="hidden md:flex items-center gap-6">
-              <button 
+              <NavLink 
+                to="#features" 
+                text="Fonctionnalités" 
+                isSection={true}
                 onClick={() => scrollTo('features')}
-                className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
-              >
-                Fonctionnalités
-              </button>
-              <button 
-                onClick={() => scrollTo('how-it-works')}
-                className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
-              >
-                Comment ça marche
-              </button>
-              <NavLink to="/invest" text="Investir" />
+                className="px-3 py-2 hover:text-primary-200 transition-colors duration-200"
+              />
               
-              {/* Menu déroulant pour les pages supplémentaires */}
-              <div className="relative group">
-                <button className="flex items-center gap-1 text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                  Plus
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-gray-800/95 backdrop-blur-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="py-1">
-                    <NavLink to="/faq" text="FAQ" className="block px-4 py-2 text-sm hover:bg-white/5" />
-                    <NavLink to="/contact" text="Contact" className="block px-4 py-2 text-sm hover:bg-white/5" />
-                    <NavLink to="/about" text="À propos" className="block px-4 py-2 text-sm hover:bg-white/5" />
-                  </div>
-                </div>
-              </div>
+              <NavLink 
+                to="#pricing" 
+                text="Pricing" 
+                isSection={true}
+                onClick={() => scrollTo('pricing')}
+                className="px-3 py-2 hover:text-primary-200 transition-colors duration-200"
+              />
+              
+              <NavLink 
+                to="#about" 
+                text="About" 
+                isSection={true}
+                onClick={() => scrollTo('about')}
+                className="px-3 py-2 hover:text-primary-200 transition-colors duration-200"
+              />
+              
+              <NavLink 
+                to="/invest" 
+                text="Investir" 
+                className="ml-2 px-5 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors duration-200 font-medium"
+              />
             </div>
 
             {/* Boutons d'authentification et thème */}
             <div className="hidden md:flex items-center gap-3">
-              {/* Bouton de bascule de thème */}
-              <div className="mr-2">
-                <ThemeToggle />
-              </div>
-              
               {user ? (
-                <div className="flex items-center gap-3">
-                  <Link 
-                    to="/dashboard" 
-                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-primary/30 flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10.394 2.08a1 1 0 01-.788 0l-7 3a1 1 0 010 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 01.287.02l4.657.98a1 1 0 01.764.727l.5 2.5a1 1 0 101.28 1.537l1.536-1.28a1 1 0 01.78-.172l2.5.5a1 1 0 01.547 1.65l-1.28 1.537a1 1 0 101.537 1.28l1.28-1.537a1 1 0 01.172-.78l.5-2.5a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-2.5-.5a1 1 0 01-.547-1.65l1.28-1.537a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-4.657-.98a1 1 0 01-.287-.02l-1.94-.832-1.32.565a1 1 0 01-.788-1.838l7-3a1 1 0 01.788 0z" clipRule="evenodd" />
-                    </svg>
-                    Tableau de bord
-                  </Link>
+                <div className="relative group">
                   <button 
-                    onClick={handleLogout}
-                    className="p-2 text-gray-400 hover:text-red-400 transition-colors duration-200"
-                    title="Déconnexion"
+                    className="flex items-center space-x-2 focus:outline-none bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg transition-all duration-200"
+                    aria-label="Menu utilisateur"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                    </svg>
+                    <User className="w-5 h-5 text-white flex-shrink-0" />
+                    <span className="text-sm font-medium text-white truncate max-w-[120px]">
+                      {user.firstName || user.first_name || user.email?.split('@')[0]}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-white/70 transition-colors flex-shrink-0" />
                   </button>
+                  
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-gray-800/95 backdrop-blur-lg border border-white/10 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform -translate-y-1 group-hover:translate-y-0">
+                    <div className="px-4 py-3 border-b border-white/5">
+                      <p className="text-sm font-medium text-white">{user.email}</p>
+                      <p className="text-xs text-gray-400">Compte {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}</p>
+                    </div>
+                    
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center px-4 py-3 text-sm text-gray-200 hover:bg-white/5 transition-colors group/item"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-3 text-primary-400 group-hover/item:text-primary-300" />
+                      <span>Tableau de bord</span>
+                    </Link>
+                    
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className={`w-full flex items-center px-4 py-3 text-sm ${isLoggingOut ? 'text-gray-500' : 'text-red-400 hover:bg-red-500/10'} transition-colors group/item`}
+                    >
+                      <LogOut className={`w-4 h-4 mr-3 ${isLoggingOut ? '' : 'group-hover/item:animate-pulse'}`} />
+                      <span>{isLoggingOut ? 'Déconnexion en cours...' : 'Déconnexion'}</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <>
-                  <Link 
-                    to="/login" 
-                    className="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors duration-200"
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-medium text-white hover:text-primary-200 transition-colors hover:bg-white/5 rounded-lg"
                   >
                     Connexion
                   </Link>
-                  <Link 
-                    to="/register" 
-                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg hover:opacity-90 transition-all duration-200"
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 rounded-lg transition-all shadow-lg hover:shadow-primary-500/20"
                   >
                     S'inscrire
                   </Link>
-                </>
+                </div>
               )}
             </div>
 
@@ -292,33 +308,31 @@ const GlassNavbar = () => {
                 to="/contact" 
                 text="Contact" 
               />
-              <div className="px-4 py-2">
-                <p className="text-xs font-medium text-gray-400 mb-1">Thème</p>
-                <ThemeToggle />
-              </div>
               
               {user ? (
                 <div className="border-t border-white/10 pt-3 mt-2">
-                  <MobileNavLink 
-                    to="/dashboard" 
-                    text="Tableau de bord"
-                    className="flex items-center gap-2 text-white"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10.394 2.08a1 1 0 01-.788 0l-7 3a1 1 0 010 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 01.287.02l4.657.98a1 1 0 01.764.727l.5 2.5a1 1 0 101.28 1.537l1.536-1.28a1 1 0 01.78-.172l2.5.5a1 1 0 01.547 1.65l-1.28 1.537a1 1 0 101.537 1.28l1.28-1.537a1 1 0 01.172-.78l.5-2.5a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-2.5-.5a1 1 0 01-.547-1.65l1.28-1.537a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-4.657-.98a1 1 0 01-.287-.02l-1.94-.832-1.32.565a1 1 0 01-.788-1.838l7-3a1 1 0 01.788 0z" clipRule="evenodd" />
-                    </svg>
-                    Tableau de bord
-                  </MobileNavLink>
-                  <MobileNavLink 
-                    onClick={handleLogout}
-                    text="Déconnexion"
-                    className="flex items-center gap-2 text-red-400 hover:bg-red-400/10"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                    </svg>
-                    Déconnexion
-                  </MobileNavLink>
+                  <div className="px-3 py-2">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 text-white hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.394 2.08a1 1 0 01-.788 0l-7 3a1 1 0 010 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 01.287.02l4.657.98a1 1 0 01.764.727l.5 2.5a1 1 0 101.28 1.537l1.536-1.28a1 1 0 01.78-.172l2.5.5a1 1 0 01.547 1.65l-1.28 1.537a1 1 0 101.537 1.28l1.28-1.537a1 1 0 01.172-.78l.5-2.5a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-2.5-.5a1 1 0 01-.547-1.65l1.28-1.537a1 1 0 10-1.537-1.28l-1.28 1.537a1 1 0 01-.78.172l-4.657-.98a1 1 0 01-.287-.02l-1.94-.832-1.32.565a1 1 0 01-.788-1.838l7-3a1 1 0 01.788 0z" clipRule="evenodd" />
+                      </svg>
+                      Tableau de bord
+                    </Link>
+                  </div>
+                  <div className="px-3 py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 text-red-400 hover:bg-red-400/10 px-3 py-2 rounded-lg transition-colors text-left"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                      </svg>
+                      Déconnexion
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="pt-3 mt-2 border-t border-white/10 flex gap-3">

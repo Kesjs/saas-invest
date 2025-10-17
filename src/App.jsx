@@ -32,7 +32,7 @@ const BaseLayout = () => {
   console.log('Rendu du composant BaseLayout');
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-black text-white">
       <StyleDebugger />
       <Toaster 
         position="top-right" 

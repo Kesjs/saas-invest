@@ -14,7 +14,7 @@ const CtaSection = () => {
   };
 
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section className="relative py-20 bg-black overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#7C3AED08_1px,transparent_1px),linear-gradient(to_bottom,#7C3AED08_1px,transparent_1px)] bg-[size:48px_48px]"></div>
       </div>

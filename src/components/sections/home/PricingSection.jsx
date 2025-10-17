@@ -19,9 +19,12 @@ const PricingSection = () => {
     {
       name: 'Starter',
       price: 100,
+      fee: 0,
       badge: 'Parfait pour débuter',
       icon: Zap,
       popular: false,
+      iconColor: 'text-blue-400',
+      gradient: 'bg-gradient-to-br from-blue-500/20 to-cyan-400/10',
       features: [
         'Retour sur investissement garanti',
         'Support prioritaire',
@@ -32,9 +35,12 @@ const PricingSection = () => {
     {
       name: 'Croissance',
       price: 225,
+      fee: 0,
       badge: 'Meilleur choix',
       icon: TrendingUp,
       popular: true,
+      iconColor: 'text-emerald-400',
+      gradient: 'bg-gradient-to-br from-emerald-500/20 to-teal-400/10',
       features: [
         'Tout dans Starter, plus:',
         'Retour sur investissement supérieur',
@@ -50,6 +56,8 @@ const PricingSection = () => {
       badge: 'Investisseur avancé',
       icon: Award,
       popular: false,
+      iconColor: 'text-purple-400',
+      gradient: 'bg-gradient-to-br from-purple-600/20 to-indigo-500/10',
       features: [
         'Tout dans Croissance, plus:',
         'Gestion de portefeuille personnalisée',
@@ -66,6 +74,8 @@ const PricingSection = () => {
       badge: 'Investisseur professionnel',
       icon: Flame,
       popular: false,
+      iconColor: 'text-orange-400',
+      gradient: 'bg-gradient-to-br from-amber-500/20 to-orange-500/10',
       features: [
         'Tout dans Premium, plus:',
         'Stratégie d\'investissement sur mesure',
@@ -79,10 +89,8 @@ const PricingSection = () => {
   ];
 
   return (
-    <section id="pricing" className="py-20 bg-gradient-to-b from-black/80 to-black/50 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-30"></div>
-      </div>
+    <section id="pricing" className="py-20 relative overflow-hidden bg-black bg-opacity-100">
+      <div className="absolute inset-0 -z-10 bg-black"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
@@ -114,9 +122,9 @@ const PricingSection = () => {
                 whileInView="visible"
                 viewport={{ once: true, margin: "-50px 0px" }}
                 variants={fadeInUp}
-                className={`relative rounded-2xl overflow-hidden border ${
+                className={`relative rounded-2xl overflow-hidden border-2 ${
                   plan.popular 
-                    ? 'border-primary/50 bg-gradient-to-br from-primary/10 to-primary/5' 
+                    ? `border-${plan.iconColor.replace('text-', '')}/50 ${plan.gradient}`
                     : 'border-white/10 bg-white/5'
                 }`}
               >
@@ -133,8 +141,8 @@ const PricingSection = () => {
                         <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
                         <span className="text-sm text-primary">{plan.badge}</span>
                       </div>
-                      <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                        <Icon className="w-6 h-6" />
+                      <div>
+                        <Icon className={`w-8 h-8 ${plan.iconColor}`} />
                       </div>
                     </div>
                     
@@ -163,7 +171,7 @@ const PricingSection = () => {
                     whileTap={{ scale: 0.98 }}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mt-auto ${
                       plan.popular
-                        ? 'bg-primary hover:bg-primary/90 text-white'
+                        ? `bg-gradient-to-r ${plan.color} hover:opacity-90 text-white`
                         : 'bg-white/10 hover:bg-white/20 text-white'
                     }`}
                   >

@@ -15,19 +15,14 @@ import App, {
 } from '../App';
 
 // Import des pages statiques
-import {
-  AboutPage,
-  TeamPage,
-  CareersPage,
-  HelpPage,
-  ContactPage,
-  MentionsLegalesPage,
-  PolitiqueConfidentialitePage,
-  PolitiqueCookiesPage,
-  ConditionsGeneralesPage,
-  StatusPage,
-  AssistancePage
-} from '../pages/static';
+import AboutPage from '../pages/static/about';
+import TeamPage from '../pages/static/team';
+import CareersPage from '../pages/static/careers';
+import HelpPage from '../pages/static/help';
+import ContactPage from '../pages/static/contact';
+import MentionsLegalesPage from '../pages/static/legal';
+import PolitiqueConfidentialitePage from '../pages/static/privacy';
+import PolitiqueCookiesPage from '../pages/static/cookies';
 
 import UnauthorizedPage from '../components/common/UnauthorizedPage';
 import Layout from '../components/layout/Layout';
@@ -58,9 +53,9 @@ const router = createBrowserRouter([
       { path: "/mentions-legales", element: <MentionsLegalesPage /> },
       { path: "/confidentialite", element: <PolitiqueConfidentialitePage /> },
       { path: "/cookies", element: <PolitiqueCookiesPage /> },
-      { path: "/conditions", element: <ConditionsGeneralesPage /> },
-      { path: "/statut", element: <StatusPage /> },
-      { path: "/assistance", element: <AssistancePage /> },
+      { path: "/conditions", element: <div className="min-h-screen p-8"><h1>Conditions Générales d'Utilisation</h1></div> },
+      { path: "/statut", element: <div className="min-h-screen p-8"><h1>Statut du Service</h1></div> },
+      { path: "/assistance", element: <div className="min-h-screen p-8"><h1>Assistance 24/7</h1></div> },
       
       // Routes protégées
       {
