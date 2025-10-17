@@ -62,6 +62,25 @@ const MobileNavLink = ({ to, onClick, text, className = '', isSection = false })
   );
 };
 
+// Fonction utilitaire pour obtenir le nom d'affichage de l'utilisateur
+const getUserDisplayName = (user) => {
+  if (!user) return 'Mon Compte';
+  
+  // Essayer dans l'ordre : fullName, firstName + lastName, user_metadata, email
+  return (
+    user.fullName ||
+    (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+    (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : null) ||
+    user.user_metadata?.full_name ||
+    (user.user_metadata?.first_name && user.user_metadata?.last_name 
+      ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}` 
+      : null) ||
+    user.user_metadata?.name ||
+    user.email?.split('@')[0] ||
+    'Mon Compte'
+  );
+};
+
 const GlassNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -69,6 +88,23 @@ const GlassNavbar = () => {
   const navigate = useNavigate();
   const { user, logout, loading: authLoading } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Débogage des données utilisateur
+  useEffect(() => {
+    if (user) {
+      console.log('Données utilisateur:', {
+        email: user.email,
+        fullName: user.fullName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        user_metadata: user.user_metadata,
+        raw: user
+      });
+      
+      // Afficher le nom calculé
+      console.log('Nom d\'affichage calculé:', getUserDisplayName(user));
+    }
+  }, [user]);
   
   // Fermer le menu mobile lors du changement de route
   useEffect(() => {
@@ -219,15 +255,18 @@ const GlassNavbar = () => {
                   >
                     <User className="w-5 h-5 text-white flex-shrink-0" />
                     <span className="text-sm font-medium text-white truncate max-w-[120px]">
-                      {user.firstName || user.first_name || user.email?.split('@')[0]}
+                      {getUserDisplayName(user)}
                     </span>
                     <ChevronDown className="w-4 h-4 text-white/70 transition-colors flex-shrink-0" />
                   </button>
                   
                   <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-gray-800/95 backdrop-blur-lg border border-white/10 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform -translate-y-1 group-hover:translate-y-0">
                     <div className="px-4 py-3 border-b border-white/5">
-                      <p className="text-sm font-medium text-white">{user.email}</p>
-                      <p className="text-xs text-gray-400">Compte {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}</p>
+                      <p className="text-sm font-medium text-white truncate">{getUserDisplayName(user)}</p>
+                      <p className="text-xs text-gray-400 mt-1">{user.email}</p>
+                      <p className="text-xs text-primary-300 mt-1">
+                        {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
+                      </p>
                     </div>
                     
                     <Link

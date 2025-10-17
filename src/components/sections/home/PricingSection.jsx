@@ -122,11 +122,13 @@ const PricingSection = () => {
                 whileInView="visible"
                 viewport={{ once: true, margin: "-50px 0px" }}
                 variants={fadeInUp}
-                className={`relative rounded-2xl overflow-hidden border-2 ${
+                className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
                   plan.popular 
-                    ? `border-${plan.iconColor.replace('text-', '')}/50 ${plan.gradient}`
-                    : 'border-white/10 bg-white/5'
-                }`}
+                    ? `border-${plan.iconColor.replace('text-', '')}/50 ${plan.gradient} hover:bg-emerald-500/10`
+                    : 'border-white/10 bg-white/5 hover:bg-opacity-20'
+                } ${plan.name === 'Starter' ? 'hover:bg-blue-500/10' : ''} ${
+                  plan.name === 'Premium' ? 'hover:bg-purple-500/10' : ''
+                } ${plan.name === 'Élite' ? 'hover:bg-orange-500/10' : ''}`}
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-lg">

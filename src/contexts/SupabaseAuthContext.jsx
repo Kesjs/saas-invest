@@ -1,11 +1,21 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../services/supabase/supabaseClient';
 
 // Configuration
 const TOKEN_REFRESH_BUFFER = 60 * 5; // 5 minutes avant expiration
 const VISIBILITY_CHECK_INTERVAL = 60000; // 1 minute
 
-const AuthContext = createContext(null);
+const AuthContext = createContext({
+  user: null,
+  loading: true,
+  isInitialized: false,
+  isAuthenticated: false,
+  login: () => {},
+  register: () => {},
+  logout: () => {},
+  refreshUser: () => {},
+  updateProfile: () => {}
+});
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -14,63 +24,140 @@ export const AuthProvider = ({ children }) => {
   const refreshTimer = useRef(null);
   const visibilityCheckTimer = useRef(null);
 
+  // Vérifier la connectivité réseau
+  const checkNetworkConnectivity = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout after 5 seconds
+      
+      const response = await fetch('https://xekcxuigrzxvkiueuorw.supabase.co/rest/v1/', {
+        method: 'HEAD',
+        signal: controller.signal,
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch (error) {
+      console.warn('[AUTH] Erreur de connexion au serveur:', error.message);
+      return false;
+    }
+  };
+
+  // État pour suivre si l'initialisation est terminée
+  const [isInitialized, setIsInitialized] = useState(false);
+  const refreshInterval = useRef(null);
+  const authSubscription = useRef(null);
+
+  // Fonction pour gérer la session utilisateur
+  const handleSession = useCallback(async (session) => {
+    if (!session?.user) {
+      console.log('[AUTH] Aucune session utilisateur active');
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log('[AUTH] Session utilisateur détectée:', session.user.email);
+      
+      // Vérifier si l'utilisateur a un profil
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('[AUTH] Erreur lors de la récupération du profil:', profileError);
+        setUser(session.user); // On définit quand même l'utilisateur même sans profil
+        return;
+      }
+
+      // Mettre à jour l'état utilisateur avec les données du profil
+      setUser({
+        ...session.user,
+        profile: profile || null
+      });
+    } catch (error) {
+      console.error('[AUTH] Erreur lors du traitement de la session:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Initialiser l'état d'authentification
   useEffect(() => {
-    console.log('[AUTH] Vérification de la session utilisateur...');
-    
-    // Vérifier la session active
-    const checkSession = async () => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
       try {
+        console.log('[AUTH] Initialisation de l\'authentification...');
         setLoading(true);
+
+        // Vérifier d'abord la session existante
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
         
         if (error) {
           console.error('[AUTH] Erreur lors de la vérification de la session:', error);
           setUser(null);
-        } else if (session?.user) {
-          // Vérifier si l'utilisateur a changé avant de mettre à jour l'état
-          if (JSON.stringify(session.user) !== JSON.stringify(user)) {
-            console.log('[AUTH] Utilisateur connecté:', session.user.email);
-            setUser(session.user);
-          }
-        } else {
-          console.log('[AUTH] Aucun utilisateur connecté');
-          setUser(null);
+          setLoading(false);
+          setIsInitialized(true);
+          return;
         }
+
+        await handleSession(session);
+        setIsInitialized(true);
+
+        // Configurer l'écouteur d'état d'authentification
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            if (!isMounted) return;
+            console.log(`[AUTH] Événement d'authentification: ${event}`);
+            await handleSession(newSession);
+          }
+        );
+        authSubscription.current = subscription;
+
+        // Mettre en place le rafraîchissement périodique du token
+        refreshInterval.current = setInterval(async () => {
+          try {
+            const { data, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) throw refreshError;
+            if (data?.session) {
+              console.log('[AUTH] Session rafraîchie avec succès');
+              await handleSession(data.session);
+            }
+          } catch (refreshError) {
+            console.warn('[AUTH] Erreur lors du rafraîchissement de la session:', refreshError);
+          }
+        }, 1000 * 60 * 30); // Toutes les 30 minutes
+
       } catch (error) {
-        console.error('[AUTH] Erreur inattendue:', error);
+        console.error('[AUTH] Erreur lors de l\'initialisation de l\'authentification:', error);
         setUser(null);
-      } finally {
         setLoading(false);
+        setIsInitialized(true);
       }
     };
 
-    // Vérifier la session initiale
-    checkSession();
+    initializeAuth();
 
-    // Écouter les changements d'état d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[AUTH] Événement d\'authentification:', event);
-        
-        // Ne mettre à jour l'état que si nécessaire
-        if (session?.user) {
-          if (JSON.stringify(session.user) !== JSON.stringify(user)) {
-            setUser(session.user);
-          }
-        } else if (user !== null) {
-          setUser(null);
-        }
-      }
-    );
-
-    // Nettoyer l'abonnement lors du démontage
+    // Nettoyage
     return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
+      isMounted = false;
+      if (refreshInterval.current) clearInterval(refreshInterval.current);
+      if (authSubscription.current) {
+        authSubscription.current.unsubscribe?.();
       }
     };
-  }, []); // Suppression de user comme dépendance
+  }, []); // Retirer handleSession des dépendances pour éviter les boucles
 
   // Créer ou mettre à jour le profil utilisateur
   const upsertUserProfile = useCallback(async (userData, profileData = {}) => {
@@ -119,49 +206,29 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Charger le profil utilisateur
+  // Charger le profil utilisateur (version simplifiée)
   const fetchUserProfile = useCallback(async (userData) => {
     if (!userData) return null;
     
     try {
-      // Essayer de récupérer le profil
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userData.id)
-        .single();
-      
-      // Si le profil n'existe pas, le créer
-      if (error && error.code === 'PGRST116') {
-        return await upsertUserProfile(userData);
-      }
-      
-      if (error) throw error;
-      
-      // Fusionner les données de l'utilisateur avec le profil
+      // Version simplifiée qui ne charge pas le profil depuis la base de données
+      // pour éviter les problèmes de chargement infini
       const userWithProfile = {
-        ...userData,
-        ...profile,
-        // Assurer la rétrocompatibilité
-        firstName: profile.first_name || profile.firstName || userData.user_metadata?.first_name || userData.user_metadata?.name?.split(' ')[0] || '',
-        lastName: profile.last_name || profile.lastName || userData.user_metadata?.last_name || userData.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-        fullName: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || userData.user_metadata?.full_name || userData.user_metadata?.name || ''
-      };
-      
-      setUser(userWithProfile);
-      return userWithProfile;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      // En cas d'erreur, retourner l'utilisateur de base avec les métadonnées
-      const userWithMetadata = {
         ...userData,
         firstName: userData.user_metadata?.first_name || userData.user_metadata?.name?.split(' ')[0] || '',
         lastName: userData.user_metadata?.last_name || userData.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
         fullName: userData.user_metadata?.full_name || userData.user_metadata?.name || ''
       };
-      return userWithMetadata;
+      
+      setUser(userWithProfile);
+      return userWithProfile;
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      // En cas d'erreur, retourner l'utilisateur de base
+      setUser(userData);
+      return userData;
     }
-  }, [upsertUserProfile]);
+  }, []);
 
   // Fonction d'inscription
   const register = useCallback(async (userData) => {
@@ -200,12 +267,14 @@ export const AuthProvider = ({ children }) => {
   }, [upsertUserProfile]);
 
   // Valeur du contexte
-  const value = {
+  const value = useMemo(() => ({
     user,
-    loading,
+    loading: loading || !isInitialized,
+    isInitialized,
     isAuthenticated: !!user,
     login: async (email, password) => {
       try {
+        setLoading(true);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -218,6 +287,8 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Login error:', error);
         throw error;
+      } finally {
+        setLoading(false);
       }
     },
     register,
@@ -236,16 +307,27 @@ export const AuthProvider = ({ children }) => {
     },
     // Rafraîchir les données utilisateur
     refreshUser: async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        const userWithProfile = await fetchUserProfile(currentUser);
-        setUser(userWithProfile);
-        return userWithProfile;
+      try {
+        setLoading(true);
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        
+        if (currentUser) {
+          const userWithProfile = await fetchUserProfile(currentUser);
+          setUser(userWithProfile);
+          return userWithProfile;
+        }
+        return null;
+      } catch (error) {
+        console.error('Error refreshing user:', error);
+        throw error;
+      } finally {
+        setLoading(false);
       }
-      return null;
     },
     updateProfile: async (updates) => {
       try {
+        setLoading(true);
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (!currentUser) throw new Error('Utilisateur non connecté');
         
@@ -255,38 +337,39 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error updating profile:', error);
         throw error;
+      } finally {
+        setLoading(false);
       }
     }
-  };
+  }), [user, loading, isInitialized, fetchUserProfile, register, upsertUserProfile]);
 
-  // Mettre à jour l'utilisateur quand la session change
+  // Mettre à jour l'utilisateur quand la session change (version simplifiée)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('[AUTH] Événement d\'authentification:', event);
         
+        // Mettre à jour l'état en fonction de l'événement
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-          if (session?.user) {
-            const userWithProfile = await fetchUserProfile(session.user);
-            setUser(userWithProfile);
-          } else {
-            setUser(null);
-          }
+          setUser(session?.user || null);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
         }
+        
+        // Toujours arrêter le chargement après un événement d'authentification
+        setLoading(false);
       }
     );
 
     return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
+      if (subscription?.unsubscribe) {
         subscription.unsubscribe();
       }
     };
-  }, [fetchUserProfile]);
+  }, []);
 
-  // Si en cours de chargement, afficher un écran de chargement
-  if (loading) {
+  // Si l'initialisation n'est pas terminée, afficher un écran de chargement
+  if (!isInitialized) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -296,7 +379,13 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading ? (
+        <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };

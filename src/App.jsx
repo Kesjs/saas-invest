@@ -6,8 +6,9 @@ import StyleDebugger from './components/debug/StyleDebugger';
 
 // Composant de chargement simplifié
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+    <p className="text-gray-400">Chargement en cours...</p>
   </div>
 );
 
@@ -54,11 +55,7 @@ const BaseLayout = () => {
           window.location.reload();
         }}
       >
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        }>
+        <Suspense fallback={<LoadingFallback />}>
           <Outlet />
         </Suspense>
       </ErrorBoundary>
@@ -125,13 +122,7 @@ export default function App() {
 
   if (!isInitialized) {
     console.log('[APP] Affichage du loader de chargement');
-    return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <p className="mt-4 text-gray-400">Chargement en cours...</p>
-        <p className="text-sm text-gray-500 mt-2">Veuillez patienter</p>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   console.log('[APP] Affichage du contenu principal');
@@ -148,11 +139,7 @@ export default function App() {
     window.location.reload();
   }}
 >
-  <Suspense fallback={
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
-    </div>
-  }>
+  <Suspense fallback={<LoadingFallback />}>
     <Outlet />
   </Suspense>
 </ErrorBoundary>
